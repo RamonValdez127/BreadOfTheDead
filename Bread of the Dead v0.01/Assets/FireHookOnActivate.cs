@@ -17,6 +17,8 @@ public class FireHookOnActivate : MonoBehaviour
 */
     private bool hooked = false;
 
+    public AudioClip clip;
+    private AudioSource source;
     public GameObject movement;
 
     public Transform debugHitPointTransform;
@@ -31,6 +33,7 @@ public class FireHookOnActivate : MonoBehaviour
         grabbable.activated.AddListener(HandleHookshotStart);
         grabbable.deactivated.AddListener(HandleHookshotEnd);
         grabbable.selectExited.AddListener(HandleHookshotDrop);
+        source = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -60,6 +63,10 @@ public class FireHookOnActivate : MonoBehaviour
             hookshotDirection = (raycastHit.point - transform.position).normalized;
             hooked = true;
             movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
+        }
+
+        else{
+            source.PlayOneShot(clip);
         }
     }
 

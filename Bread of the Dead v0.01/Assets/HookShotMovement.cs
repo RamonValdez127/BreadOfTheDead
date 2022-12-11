@@ -21,11 +21,11 @@ public class HookShotMovement : MonoBehaviour
         head = GO_head.GetComponent<Rigidbody>();
     }
 
-    public void toggleGravity(){
-        body.useGravity = !body.useGravity;
-        leftHand.useGravity = !leftHand.useGravity;
-        rightHand.useGravity = !rightHand.useGravity;
-        head.useGravity = !head.useGravity;
+    public void toggleGravity(bool value){
+        body.useGravity = value;
+        leftHand.useGravity = value;
+        rightHand.useGravity = value;
+        head.useGravity = value;
     }
 
     public void applyVelocity(Vector3 nVelocity){

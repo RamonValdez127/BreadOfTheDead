@@ -24,8 +24,6 @@ public class FireHookOnActivate : MonoBehaviour
     Vector3 hookshotDirection;
 
     public float hookshotSpeed = 0.1f;
-    float auxHookshotSpeed = 0.1f;
-    float deceleration = 1f;
 
     void Start()
     {
@@ -39,11 +37,14 @@ public class FireHookOnActivate : MonoBehaviour
     void Update()
     {
     
-        if (hooked && movement.GetComponent<ContinuousMovementPhysics>().CheckIfGrounded()){
+        if (hooked){
             movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
         }
 
-        //Debug.Log(movement.GetComponent<ContinuousMovementPhysics>().CheckIfGrounded());
+        Debug.Log("Ground is: ");
+        Debug.Log(movement.GetComponent<ContinuousMovementPhysics>().CheckIfGrounded());
+        Debug.Log("Hooked is: ");
+        Debug.Log(hooked);
     
     }
 
@@ -54,7 +55,7 @@ public class FireHookOnActivate : MonoBehaviour
         if(!hooked && Physics.Raycast(transform.position, transform.forward, out RaycastHit raycastHit))
         {   
             
-            movement.GetComponent<HookShotMovement>().toggleGravity();
+            movement.GetComponent<HookShotMovement>().toggleGravity(false);
             debugHitPointTransform.position = raycastHit.point;
             hookshotDirection = (raycastHit.point - transform.position).normalized;
             hooked = true;
@@ -65,14 +66,17 @@ public class FireHookOnActivate : MonoBehaviour
     private void HandleHookshotEnd(DeactivateEventArgs arg)
     {
         Debug.Log("Trigger left");
-        movement.GetComponent<HookShotMovement>().toggleGravity();
+        movement.GetComponent<HookShotMovement>().toggleGravity(true);
         hooked = false;
     }
 
     private void HandleHookshotDrop(SelectExitEventArgs arg)
     {
-        movement.GetComponent<HookShotMovement>().toggleGravity();
-        hooked = false;
+        if(hooked){
+            movement.GetComponent<HookShotMovement>().toggleGravity(true);
+            hooked = false;
+        }
+        
     }
 
     

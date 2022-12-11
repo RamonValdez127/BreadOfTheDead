@@ -5,6 +5,7 @@ using UnityEngine;
 public class PhysicRig : MonoBehaviour
 {
     public Transform playerHead;
+    //public Transform headCollider;
     public Transform leftController;
     public Transform rightController;
 
@@ -29,6 +30,6 @@ public class PhysicRig : MonoBehaviour
         rightHandJoint.targetPosition = rightController.localPosition;
         rightHandJoint.targetRotation = rightController.localRotation;
 
-        headJoint.targetPosition = playerHead.localPosition;
+        //headCollider.transform.position = playerHead.localPosition;
     }
 }

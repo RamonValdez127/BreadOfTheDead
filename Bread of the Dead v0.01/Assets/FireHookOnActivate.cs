@@ -16,19 +16,28 @@ public class FireHookOnActivate : MonoBehaviour
     public GameObject movement;
 */
     private bool hooked = false;
+    private bool throwingHook = false;
 
     public AudioClip clip;
     private AudioSource source;
     public GameObject movement;
+    public Transform ShotExitPosition;
 
     public Transform debugHitPointTransform;
 
     Vector3 hookshotDirection;
+    Vector3 hookshotPosition;
 
     public float hookshotSpeed = 0.1f;
 
+    public Transform mixerBladeTransform;
+    public GameObject fakeBlade;
+    public float hookshotThrowSpeed;
+    float hookshotSize;
+
     void Start()
     {
+        mixerBladeTransform.gameObject.SetActive(false);
         XRGrabInteractable grabbable = GetComponent<XRGrabInteractable>();
         grabbable.activated.AddListener(HandleHookshotStart);
         grabbable.deactivated.AddListener(HandleHookshotEnd);
@@ -40,29 +49,37 @@ public class FireHookOnActivate : MonoBehaviour
     void Update()
     {
     
+        if (throwingHook)
+        {
+            HandleHookshotThrow();
+        }
         if (hooked){
+            mixerBladeTransform.position = hookshotPosition;
             movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
         }
 
-        Debug.Log("Ground is: ");
+        /*Debug.Log("Ground is: ");
         Debug.Log(movement.GetComponent<ContinuousMovementPhysics>().CheckIfGrounded());
         Debug.Log("Hooked is: ");
-        Debug.Log(hooked);
+        Debug.Log(hooked);*/
     
     }
 
 
     private void HandleHookshotStart(ActivateEventArgs arg)
     {   
-        Debug.Log("Trigger press");
-        if(!hooked && Physics.Raycast(transform.position, transform.forward, out RaycastHit raycastHit))
+        //Debug.Log("Trigger press");
+        if(!throwingHook && !hooked && Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit))
         {   
-            
-            movement.GetComponent<HookShotMovement>().toggleGravity(false);
+            fakeBlade.SetActive(false);
+            mixerBladeTransform.gameObject.SetActive(true);
+            mixerBladeTransform.position = ShotExitPosition.position;
+            mixerBladeTransform.rotation = ShotExitPosition.rotation;
             debugHitPointTransform.position = raycastHit.point;
-            hookshotDirection = (raycastHit.point - transform.position).normalized;
-            hooked = true;
-            movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
+            hookshotPosition = raycastHit.point;
+            //hookshotDirection = (raycastHit.point - ShotExitPosition.transform.position).normalized;
+            throwingHook = true;
+            hookshotSize = 0f;
         }
 
         else{
@@ -70,11 +87,29 @@ public class FireHookOnActivate : MonoBehaviour
         }
     }
 
+    private void HandleHookshotThrow()
+    {
+        hookshotDirection = (hookshotPosition - ShotExitPosition.position).normalized;
+        hookshotSize += hookshotThrowSpeed * Time.deltaTime;
+        mixerBladeTransform.position += (hookshotThrowSpeed * Time.deltaTime)*hookshotDirection;//new Vector3(mixerBladeTransform.localPosition.x, mixerBladeTransform.localPosition.y, hookshotSize*25/2);
+
+        if(hookshotSize >= Vector3.Distance(ShotExitPosition.position, hookshotPosition))
+        {
+            hooked = true;
+            throwingHook = false;
+            movement.GetComponent<HookShotMovement>().toggleGravity(false);
+            movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
+        }
+    }
+
     private void HandleHookshotEnd(DeactivateEventArgs arg)
     {
-        Debug.Log("Trigger left");
+        //Debug.Log("Trigger left");
         movement.GetComponent<HookShotMovement>().toggleGravity(true);
         hooked = false;
+        mixerBladeTransform.position = ShotExitPosition.transform.position;
+        fakeBlade.SetActive(true);
+        mixerBladeTransform.gameObject.SetActive(false);
     }
 
     private void HandleHookshotDrop(SelectExitEventArgs arg)
@@ -83,7 +118,9 @@ public class FireHookOnActivate : MonoBehaviour
             movement.GetComponent<HookShotMovement>().toggleGravity(true);
             hooked = false;
         }
-        
+        mixerBladeTransform.position = ShotExitPosition.transform.position;
+        fakeBlade.SetActive(true);
+        mixerBladeTransform.gameObject.SetActive(false);
     }
 
     

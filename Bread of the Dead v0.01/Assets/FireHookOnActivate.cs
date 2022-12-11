@@ -23,9 +23,7 @@ public class FireHookOnActivate : MonoBehaviour
 
     Vector3 hookshotDirection;
 
-    public InputActionProperty leftActivate;
-
-    float hookshotSpeed = 0.1f;
+    public float hookshotSpeed = 0.1f;
     float auxHookshotSpeed = 0.1f;
     float deceleration = 1f;
 
@@ -41,39 +39,39 @@ public class FireHookOnActivate : MonoBehaviour
     void Update()
     {
     
-        if (hooked){
-            movement.GetComponent<ActionBasedContinuousMoveProvider>().callMoveRig(hookshotDirection * hookshotSpeed);
+        if (hooked && movement.GetComponent<ContinuousMovementPhysics>().CheckIfGrounded()){
+            movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
         }
-        else if(auxHookshotSpeed > 0.0001f){
-            movement.GetComponent<ActionBasedContinuousMoveProvider>().callMoveRig(hookshotDirection * auxHookshotSpeed);
-            deceleration *= .9f;
-        }
+
+        //Debug.Log(movement.GetComponent<ContinuousMovementPhysics>().CheckIfGrounded());
+    
     }
 
 
     private void HandleHookshotStart(ActivateEventArgs arg)
-    {
+    {   
+        Debug.Log("Trigger press");
         if(!hooked && Physics.Raycast(transform.position, transform.forward, out RaycastHit raycastHit))
         {   
             
-            movement.GetComponent<ActionBasedContinuousMoveProvider>().useGravity = false;
+            movement.GetComponent<HookShotMovement>().toggleGravity();
             debugHitPointTransform.position = raycastHit.point;
             hookshotDirection = (raycastHit.point - transform.position).normalized;
-            movement.GetComponent<ActionBasedContinuousMoveProvider>().useGravity = false;
             hooked = true;
-            auxHookshotSpeed = hookshotSpeed;
+            movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
         }
     }
 
     private void HandleHookshotEnd(DeactivateEventArgs arg)
     {
-        movement.GetComponent<ActionBasedContinuousMoveProvider>().useGravity = true;
+        Debug.Log("Trigger left");
+        movement.GetComponent<HookShotMovement>().toggleGravity();
         hooked = false;
     }
 
     private void HandleHookshotDrop(SelectExitEventArgs arg)
     {
-        movement.GetComponent<ActionBasedContinuousMoveProvider>().useGravity = true;
+        movement.GetComponent<HookShotMovement>().toggleGravity();
         hooked = false;
     }
 

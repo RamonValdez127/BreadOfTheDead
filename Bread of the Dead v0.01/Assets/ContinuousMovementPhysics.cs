@@ -30,6 +30,9 @@ public class ContinuousMovementPhysics : MonoBehaviour
         bool isGrounded = CheckIfGrounded();
         
         if(isGrounded){
+            
+            
+            
             Quaternion yaw = Quaternion.Euler(0, directionSource.eulerAngles.y, 0);
             Vector3 direction = yaw * new Vector3(inputMoveAxis.x, 0, inputMoveAxis.y);
 

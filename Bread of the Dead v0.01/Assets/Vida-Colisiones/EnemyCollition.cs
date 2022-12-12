@@ -1,22 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 
 public class EnemyCollition : MonoBehaviour
 {
-    //public WeponController wp;
-    public PlayerHealth MiniEnemy;
-    public GameObject Enemy;
+    public PlayerHealth Enemy;
 
     private void OnTriggerEnter(Collider other){
-        if(other.tag == "Enemy" /*&& wp.IsAttacking*/){
+        if(other.tag == "Weapon"){
             //Aqui va alguna animacion
-            MiniEnemy.TakeDamage(10);
-            if(MiniEnemy.health <= 0){
+            Enemy.TakeDamage(10);
+            Debug.Log("Damage Enemy:");
+            Debug.Log(Enemy.health);
+            /*if(MiniEnemy.health <= 0){
                 MiniEnemy.health = Mathf.Clamp(MiniEnemy.health,0,MiniEnemy.maxhealth);
                 MiniEnemy.UpdateHealthUI();
                 Enemy.SetActive (false);
-            }
+            }*/
         }
     }
 }

@@ -1,0 +1,303 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Movement : MonoBehaviour
+{
+    private State state;
+
+    private enum State
+    {
+        standing,
+        moving,
+        attacking,
+        rotating,
+        rotating2,
+        dead,
+        waiting,
+        falling
+    }
+    public float health;
+
+    int JhonnyPlat = 0;
+    public int playerPlat;
+
+    private float playerT = 0;
+
+    public GameObject GameZone;
+    public Vector3[] JhonnyPositions;
+
+    Vector3 targetPos;
+    Vector3 targetDirection;
+    Quaternion oldRotation;
+    Vector3 rotationStep;
+    float targetRotation;
+    int platChange;
+    float rotationTime;
+    public float  speed;
+
+    public GameObject Enemy;
+    private Animator anim;
+    AnimatorStateInfo animStateInfo;
+    bool animationFinished = true;
+    int attacks = 0;
+
+    private PlayerHealth tHealth;
+    float NTime;
+
+    float cTime = 0;
+
+    int currAttack = -1;
+
+    bool fallAnimationFinished = true;
+    
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        anim =  Enemy.GetComponent<Animator>();
+       
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if ( GetComponent<PlayerHealth>().health == 0)
+            state = State.dead;
+        switch (state)
+        {
+            case State.waiting:
+                breathe();
+                break;
+            case State.dead:
+                die();
+                break;
+            case State.attacking:
+                //Debug.Log("Atacamos");
+                attack();
+                break;
+            case State.rotating:
+                //Debug.Log("Rotamos");
+                animationFinished = true;
+                rotate();
+                break;
+            case State.rotating2:
+                //Debug.Log("Rotamos2");
+                rotate();
+                break;
+            case State.moving:
+                //Debug.Log("Nos Movemos");
+                moveToPlatform(JhonnyPlat);
+                break;
+            case State.standing:
+                //Debug.Log("Entramos");
+                playerPlat = GameZone.GetComponent<DetectPlayer>().activePlatform;
+                if(playerPlat == JhonnyPlat){
+                    if(attacks == 4){
+                        attacks = 0;
+                        state = State.falling;
+                    }
+                    else
+                        state = State.attacking;
+                }
+                else if(playerT < 5f){
+                    playerT+=Time.deltaTime;
+                }
+                    
+                else
+                {
+                    targetPos = JhonnyPositions[playerPlat];
+                    targetDirection = (targetPos - transform.position).normalized;
+                    platChange = JhonnyPlat - playerPlat;
+                    if(platChange == 2 || platChange == -2)
+                    {
+                        targetRotation = 4f;
+                        rotationStep = new Vector3(0f, -45f, 0f);
+                    }
+                    else if(platChange == 1 || platChange == -3)
+                    {
+                        targetRotation = 3f;
+                        rotationStep = new Vector3(0f, -45f, 0f);
+                    }
+                    else
+                    {
+                        targetRotation = 3f;
+                        rotationStep = new Vector3(0f, 45f, 0f);
+                    }
+                    state = State.rotating;
+                    playerT = 0;
+
+                }
+                rotationTime = 0f;
+                oldRotation = transform.rotation;
+                break;
+            case State.falling:
+                
+                if (fallAnimationFinished){
+                    anim.SetTrigger("Fall");
+                    fallAnimationFinished = false;
+                }
+
+                cTime += Time.deltaTime;
+                if(cTime > 24.0F){
+                    fallAnimationFinished = true;
+                    cTime = 0;
+                    state = State.standing;
+                }
+
+                break;
+        }
+    }
+
+    void moveToPlatform(int newPlat)
+    {   
+
+        animStateInfo = anim.GetCurrentAnimatorStateInfo(0);
+        NTime = animStateInfo.normalizedTime;
+        if(NTime > 1.0f){
+            animationFinished = true;
+        }
+
+        if(animationFinished){
+            animationFinished = false;
+            anim.SetTrigger("Move");
+        }
+
+        if(Vector3.Distance(transform.position, targetPos) <= .1)
+        {
+            if(targetRotation == 4f)
+            {
+                state = State.standing;
+                return;
+            }
+            rotationTime = 0f;
+            oldRotation = transform.rotation;
+            rotationStep *= -1f;
+            targetRotation = 1f;
+            state = State.rotating2;
+            return;
+        }
+        transform.position += targetDirection * Time.deltaTime * speed;
+        //if(trans)
+    }
+
+    void rotate()
+    {   
+        animStateInfo = anim.GetCurrentAnimatorStateInfo(0);
+        NTime = animStateInfo.normalizedTime;
+        if(NTime > 1.0f){
+            animationFinished = true;
+        }
+
+        if(animationFinished){
+            animationFinished = false;
+            anim.SetTrigger("Move");
+        }
+
+        rotationTime += Time.deltaTime;
+        if(rotationTime >= targetRotation)
+        {
+            transform.rotation = oldRotation;
+            transform.Rotate(rotationStep*rotationTime);
+            if(state == State.rotating)
+            {
+                state = State.moving;
+                JhonnyPlat = playerPlat;
+            }
+            else
+                state = State.standing;
+        }
+        else
+        {
+            transform.Rotate(rotationStep*Time.deltaTime);
+        }
+    }
+
+    void attack()
+    {   
+        if(currAttack == -1){
+            currAttack = Random.Range(1,4);
+        }
+        
+        else if(currAttack == 1){
+            if(animationFinished){
+                animationFinished = false;
+                cTime = 0;
+                anim.SetTrigger("Attack1");
+            }
+
+            else{
+                cTime += Time.deltaTime;
+                if(cTime > 7.0f){
+                    animationFinished = true;
+                    attacks += 1;
+                    Debug.Log(attacks);
+                    currAttack = -1;
+                    state = State.standing;
+                }
+            }
+        }
+
+        else if(currAttack == 2){
+            if(animationFinished){
+                animationFinished = false;
+                cTime = 0;
+                anim.SetTrigger("Attack2");
+            }
+
+            else{
+                cTime += Time.deltaTime;
+                if(cTime > 6.0f){
+                    animationFinished = true;
+                    attacks += 1;
+                    Debug.Log(attacks);
+                    currAttack = -1;
+                    state = State.standing;
+                }
+            }
+        }
+
+        else if(currAttack == 3){
+            if(animationFinished){
+                animationFinished = false;
+                cTime = 0;
+                currAttack = -1;
+                anim.SetTrigger("Attack3");
+            }
+
+            else{
+                cTime += Time.deltaTime;
+                if(cTime > 6.0f){
+                    animationFinished = true;
+                    attacks += 1;
+                    Debug.Log(attacks);
+                    state = State.standing;
+                }
+            }
+        }
+        
+        
+    }
+
+    void breathe()
+    {
+
+    }
+
+    void die()
+    {   
+        if(animationFinished){
+                animationFinished = false;
+                cTime = 0;
+                currAttack = -1;
+                anim.SetTrigger("Die");
+            }
+
+            else{
+                
+                
+            }
+        
+    }
+}

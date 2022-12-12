@@ -8,6 +8,8 @@ TagManager:
   - Right Hand
   - Atole
   - Body
+  - Enemy
+  - Weapon
   layers:
   - Default
   - TransparentFX

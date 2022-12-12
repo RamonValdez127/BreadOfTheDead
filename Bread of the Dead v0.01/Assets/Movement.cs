@@ -5,6 +5,7 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     private State state;
+    public GameObject mixer;
 
     private enum State
     {
@@ -46,6 +47,7 @@ public class Movement : MonoBehaviour
     float NTime;
 
     float cTime = 0;
+    bool isFinished = false;
 
     int currAttack = -1;
 
@@ -57,14 +59,19 @@ public class Movement : MonoBehaviour
     void Start()
     {
         anim =  Enemy.GetComponent<Animator>();
+        state = State.waiting;
        
     }
 
     // Update is called once per frame
     void Update()
     {
-        if ( GetComponent<PlayerHealth>().health == 0)
+        if ( GetComponent<PlayerHealth>().health == 0 && !isFinished){
+            mixer.GetComponent<AudioList>().finDelJuego();
+            isFinished = true;
             state = State.dead;
+        }
+            
         switch (state)
         {
             case State.waiting:
@@ -282,7 +289,19 @@ public class Movement : MonoBehaviour
 
     void breathe()
     {
+        if(animationFinished){
+                animationFinished = false;
+                cTime = 0;
+                anim.SetTrigger("Start");
+            }
 
+            else{
+                cTime += Time.deltaTime;
+                if(cTime > 8.0f){
+                    animationFinished = true;
+                    state = State.standing;
+                }
+            }
     }
 
     void die()

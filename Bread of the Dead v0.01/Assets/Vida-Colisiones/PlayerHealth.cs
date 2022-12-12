@@ -21,11 +21,11 @@ public class PlayerHealth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        /*health = Mathf.Clamp(health,0,maxhealth);
-        UpdateHealthUI();*/
+        health = Mathf.Clamp(health,0,maxhealth);
+        UpdateHealthUI();
     }
 
-    /*public void UpdateHealthUI(){
+    public void UpdateHealthUI(){
         Debug.Log(health);
         float fillF = frontHealthBar.fillAmount;
         float fillB = backHealthBar.fillAmount;
@@ -47,7 +47,7 @@ public class PlayerHealth : MonoBehaviour
             percentComplete = percentComplete*percentComplete;
             frontHealthBar.fillAmount = Mathf.Lerp(fillF,backHealthBar.fillAmount,percentComplete);
         }
-    }*/
+    }
 
     public void TakeDamage(float damage){
         health -= damage;

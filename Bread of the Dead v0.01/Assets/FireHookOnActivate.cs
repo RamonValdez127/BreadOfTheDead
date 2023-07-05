@@ -18,10 +18,13 @@ public class FireHookOnActivate : MonoBehaviour
     private bool hooked = false;
     private bool throwingHook = false;
 
+    private LayerMask mask;
+
     public AudioClip clip;
     private AudioSource source;
     public GameObject movement;
     public Transform ShotExitPosition;
+    public float MaximumHookDistance;
 
     public Transform debugHitPointTransform;
 
@@ -38,6 +41,7 @@ public class FireHookOnActivate : MonoBehaviour
 
     void Start()
     {
+        mask = LayerMask.GetMask("Terrain");
         mixerBladeTransform.gameObject.SetActive(false);
         XRGrabInteractable grabbable = GetComponent<XRGrabInteractable>();
         grabbable.activated.AddListener(HandleHookshotStart);
@@ -74,10 +78,11 @@ public class FireHookOnActivate : MonoBehaviour
     private void HandleLaserView()
     {
         //Debug.Log("Trigger press");
-        if (Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit))
+        if (Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit, MaximumHookDistance, mask))
         {
             laserPointTransform.gameObject.SetActive(true);
-            laserPointTransform.position = raycastHit.point - (raycastHit.point - ShotExitPosition.position).normalized * .1f;
+            laserPointTransform.rotation = Quaternion.LookRotation(raycastHit.normal);
+            laserPointTransform.position = raycastHit.point;// - (raycastHit.point-ShotExitPosition.position).normalized*.1f;
         }
 
         else
@@ -89,7 +94,7 @@ public class FireHookOnActivate : MonoBehaviour
     private void HandleHookshotStart(ActivateEventArgs arg)
     {
         //Debug.Log("Trigger press");
-        if (!throwingHook && !hooked && Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit))
+        if (!throwingHook && !hooked && Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit, MaximumHookDistance, mask))
         {
             laserPointTransform.gameObject.SetActive(false);
             fakeBlade.SetActive(false);
@@ -141,9 +146,12 @@ public class FireHookOnActivate : MonoBehaviour
             movement.GetComponent<HookShotMovement>().toggleGravity(true);
             hooked = false;
         }
-        mixerBladeTransform.position = ShotExitPosition.transform.position;
-        fakeBlade.SetActive(true);
-        mixerBladeTransform.gameObject.SetActive(false);
+        if (mixerBladeTransform.gameObject.activeSelf)
+        {
+            mixerBladeTransform.position = ShotExitPosition.transform.position;
+            fakeBlade.SetActive(true);
+            mixerBladeTransform.gameObject.SetActive(false);
+        }
     }
 
 

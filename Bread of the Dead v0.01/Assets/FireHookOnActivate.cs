@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 
 
 public class FireHookOnActivate : MonoBehaviour
-{   
+{
     /*public GameObject bullet;
     public Transform spawnPoint;
     public float fireSpeed = 20;
@@ -32,6 +32,7 @@ public class FireHookOnActivate : MonoBehaviour
 
     public Transform mixerBladeTransform;
     public GameObject fakeBlade;
+    public Transform laserPointTransform;
     public float hookshotThrowSpeed;
     float hookshotSize;
 
@@ -48,29 +49,49 @@ public class FireHookOnActivate : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-    
+
         if (throwingHook)
         {
             HandleHookshotThrow();
         }
-        if (hooked){
+        else if (hooked)
+        {
             mixerBladeTransform.position = hookshotPosition;
             movement.GetComponent<HookShotMovement>().applyVelocity(hookshotDirection * hookshotSpeed);
+        }
+        else
+        {
+            HandleLaserView();
         }
 
         /*Debug.Log("Ground is: ");
         Debug.Log(movement.GetComponent<ContinuousMovementPhysics>().CheckIfGrounded());
         Debug.Log("Hooked is: ");
         Debug.Log(hooked);*/
-    
+
     }
 
+    private void HandleLaserView()
+    {
+        //Debug.Log("Trigger press");
+        if (Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit))
+        {
+            laserPointTransform.gameObject.SetActive(true);
+            laserPointTransform.position = raycastHit.point - (raycastHit.point - ShotExitPosition.position).normalized * .1f;
+        }
+
+        else
+        {
+            laserPointTransform.gameObject.SetActive(false);
+        }
+    }
 
     private void HandleHookshotStart(ActivateEventArgs arg)
-    {   
+    {
         //Debug.Log("Trigger press");
-        if(!throwingHook && !hooked && Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit))
-        {   
+        if (!throwingHook && !hooked && Physics.Raycast(ShotExitPosition.position, ShotExitPosition.transform.forward, out RaycastHit raycastHit))
+        {
+            laserPointTransform.gameObject.SetActive(false);
             fakeBlade.SetActive(false);
             mixerBladeTransform.gameObject.SetActive(true);
             mixerBladeTransform.position = ShotExitPosition.position;
@@ -82,7 +103,8 @@ public class FireHookOnActivate : MonoBehaviour
             hookshotSize = 0f;
         }
 
-        else{
+        else
+        {
             source.PlayOneShot(clip);
         }
     }
@@ -91,9 +113,9 @@ public class FireHookOnActivate : MonoBehaviour
     {
         hookshotDirection = (hookshotPosition - ShotExitPosition.position).normalized;
         hookshotSize += hookshotThrowSpeed * Time.deltaTime;
-        mixerBladeTransform.position += (hookshotThrowSpeed * Time.deltaTime)*hookshotDirection;//new Vector3(mixerBladeTransform.localPosition.x, mixerBladeTransform.localPosition.y, hookshotSize*25/2);
+        mixerBladeTransform.position += (hookshotThrowSpeed * Time.deltaTime) * hookshotDirection;//new Vector3(mixerBladeTransform.localPosition.x, mixerBladeTransform.localPosition.y, hookshotSize*25/2);
 
-        if(hookshotSize >= Vector3.Distance(ShotExitPosition.position, hookshotPosition))
+        if (hookshotSize >= Vector3.Distance(ShotExitPosition.position, hookshotPosition))
         {
             hooked = true;
             throwingHook = false;
@@ -114,7 +136,8 @@ public class FireHookOnActivate : MonoBehaviour
 
     private void HandleHookshotDrop(SelectExitEventArgs arg)
     {
-        if(hooked){
+        if (hooked)
+        {
             movement.GetComponent<HookShotMovement>().toggleGravity(true);
             hooked = false;
         }
@@ -123,6 +146,6 @@ public class FireHookOnActivate : MonoBehaviour
         mixerBladeTransform.gameObject.SetActive(false);
     }
 
-    
+
 
 }

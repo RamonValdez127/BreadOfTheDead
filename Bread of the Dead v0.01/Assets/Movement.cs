@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Movement : MonoBehaviour
 {
     private State state;
     public GameObject mixer;
+    public NavMeshAgent agent;
+    Vector3 targetDestination;
 
     private enum State
     {
@@ -15,8 +18,7 @@ public class Movement : MonoBehaviour
         rotating,
         rotating2,
         dead,
-        waiting,
-        falling
+        waiting
     }
     public float health;
 
@@ -60,12 +62,14 @@ public class Movement : MonoBehaviour
     {
         anim =  Enemy.GetComponent<Animator>();
         state = State.waiting;
+        targetDestination = agent.destination;
        
     }
 
     // Update is called once per frame
     void Update()
     {
+        Debug.Log(state);
         if ( GetComponent<PlayerHealth>().health == 0 && !isFinished){
             mixer.GetComponent<AudioList>().finDelJuego();
             isFinished = true;
@@ -101,15 +105,7 @@ public class Movement : MonoBehaviour
                 //Debug.Log("Entramos");
                 playerPlat = GameZone.GetComponent<DetectPlayer>().activePlatform;
                 if(playerPlat == JhonnyPlat){
-                    if(attacks == 4){
-                        attacks = 0;
-                        state = State.falling;
-                    }
-                    else
-                        state = State.attacking;
-                }
-                else if(playerT < 5f){
-                    playerT+=Time.deltaTime;
+                   state = State.attacking;
                 }
                     
                 else
@@ -135,24 +131,10 @@ public class Movement : MonoBehaviour
                     state = State.rotating;
                     playerT = 0;
 
+
                 }
                 rotationTime = 0f;
                 oldRotation = transform.rotation;
-                break;
-            case State.falling:
-                
-                if (fallAnimationFinished){
-                    anim.SetTrigger("Fall");
-                    fallAnimationFinished = false;
-                }
-
-                cTime += Time.deltaTime;
-                if(cTime > 24.0F){
-                    fallAnimationFinished = true;
-                    cTime = 0;
-                    state = State.standing;
-                }
-
                 break;
         }
     }
@@ -170,8 +152,17 @@ public class Movement : MonoBehaviour
             animationFinished = false;
             anim.SetTrigger("Move");
         }
+        Debug.Log( Vector3.Distance(transform.position, targetPos) );
 
-        if(Vector3.Distance(transform.position, targetPos) <= .1)
+        if (Vector3.Distance(targetDestination, targetPos) > 1.0f)
+        {
+            targetDestination = targetPos;
+            agent.destination = targetDestination;
+        }
+
+        
+
+        else if (Vector3.Distance(transform.position, targetPos) <= 1.0f)
         {
             if(targetRotation == 4f)
             {
@@ -185,7 +176,6 @@ public class Movement : MonoBehaviour
             state = State.rotating2;
             return;
         }
-        transform.position += targetDirection * Time.deltaTime * speed;
         //if(trans)
     }
 
@@ -222,8 +212,8 @@ public class Movement : MonoBehaviour
     }
 
     void attack()
-    {   
-        if(currAttack == -1){
+    {
+        /*if(currAttack == -1){
             currAttack = Random.Range(1,4);
         }
         
@@ -282,9 +272,14 @@ public class Movement : MonoBehaviour
                     state = State.standing;
                 }
             }
-        }
-        
-        
+        }*/
+
+        string attackLabel = "Attack";
+       
+        attackLabel += Random.Range(1, 4);
+        Debug.Log(attackLabel);
+        anim.SetTrigger(attackLabel);
+        state = State.standing;
     }
 
     void breathe()
